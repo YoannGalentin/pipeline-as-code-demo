@@ -1,11 +1,10 @@
 /*
 #!groovy
-jettyUrl = 'http://localhost:8081/'
 
 stage 'Dev'
-node {
+node ('docker-cloud') {
     checkout scm
-    mvn '-o clean package'
+    mvn 'clean package'
     dir('target') {stash name: 'war', includes: 'x.war'}
 }
 
@@ -17,11 +16,11 @@ parallel(longerTests: {
 })
 
 stage name: 'Staging', concurrency: 1
-node {
+node ('docker-cloud') {
     deploy 'staging'
 }
 
-input message: "Does ${jettyUrl}staging/ look good?"
+input message: "Does staging look good?"
 try {
     checkpoint('Before production')
 } catch (NoSuchMethodError _) {
@@ -29,11 +28,10 @@ try {
 }
 
 stage name: 'Production', concurrency: 1
-node {
-    sh "wget -O - -S ${jettyUrl}staging/"
+node ('docker-cloud'){
     echo 'Production server looks to be alive'
     deploy 'production'
-    echo "Deployed to ${jettyUrl}production/"
+    echo "Deployed to production"
 }
 
 def mvn(args) {
@@ -42,20 +40,17 @@ def mvn(args) {
 
 def runTests(duration) {
     node {
-        checkout scm
-        runWithServer {url ->
-            mvn "-o -f sometests test -Durl=${url} -Dduration=${duration}"
+        sh "sleep ${duration}"
         }
     }
-}
 
 def deploy(id) {
     unstash 'war'
-    sh "cp x.war /tmp/webapps/${id}.war"
+    sh "cp x.war /tmp/${id}.war"
 }
 
 def undeploy(id) {
-    sh "rm /tmp/webapps/${id}.war"
+    sh "rm /tmp/${id}.war"
 }
 
 def runWithServer(body) {
@@ -66,4 +61,6 @@ def runWithServer(body) {
     } finally {
         undeploy id
     }
-}*/
+}
+*/
+
