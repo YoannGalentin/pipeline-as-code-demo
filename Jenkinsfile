@@ -1,3 +1,4 @@
+/*
 #!groovy
 
 stage 'Dev'
@@ -51,3 +52,15 @@ def deploy(id) {
 def undeploy(id) {
     sh "rm /tmp/${id}.war"
 }
+
+def runWithServer(body) {
+    def id = UUID.randomUUID().toString()
+    deploy id
+    try {
+        body.call "${jettyUrl}${id}/"
+    } finally {
+        undeploy id
+    }
+}
+*/
+
